@@ -638,6 +638,15 @@ test('copy symbol keys in target that do exist on the target', function(t) {
 	t.end()
 })
 
+test('should not mutate options', function(t) {
+	var options = {};
+
+	merge({}, {}, options);
+
+	t.deepEqual(options, {});
+	t.end();
+})
+
 test('Falsey properties should be mergeable', function(t) {
 	var uniqueValue = {}
 
@@ -652,7 +661,7 @@ test('Falsey properties should be mergeable', function(t) {
 	var customMergeWasCalled = false
 
 	var result = merge(target, source, {
-		isMergeableObject: function() {
+		isMergeable: function() {
 			return true
 		},
 		customMerge: function() {
@@ -665,5 +674,51 @@ test('Falsey properties should be mergeable', function(t) {
 
 	t.equal(result.wat, uniqueValue)
 	t.ok(customMergeWasCalled, 'custom merge function was called')
+	t.end()
+})
+
+test('customMerge without overwriting with null or empty string', function(t) {
+	var src = { someNewVariable: "herp", very: { nested: { thing: "" } } };
+  var target = { very: { nested: { thing: "derp" } } };
+
+  var res = merge(target, src, {
+    customMerge: merge.customMergeIgnoreEmptyValues,
+  });
+
+  t.deepEqual(res, {
+    someNewVariable: "herp",
+    very: { nested: { thing: "derp" } },
+  });
+  t.end();
+})
+
+test('should not mutate options', function(t) {
+	var options = {}
+
+	merge({}, {}, options)
+
+	t.deepEqual(options, {})
+	t.end()
+})
+
+test('With clone: false, merge should not clone the target root', t => {
+	const destination = {}
+	const output = merge(destination, {
+		sup: true
+	}, { clone: false })
+
+	t.equal(destination, output)
+	t.end()
+})
+
+test('With clone: false, merge.all should not clone the target root', t => {
+	const destination = {}
+	const output = merge.all([
+		destination, {
+			sup: true
+		}
+	], { clone: false })
+
+	t.equal(destination, output)
 	t.end()
 })
